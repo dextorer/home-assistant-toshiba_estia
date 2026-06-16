@@ -15,7 +15,7 @@ from .const import DOMAIN
 
 PLATFORMS = ["climate",  "sensor",  "water_heater", "binary_sensor"]
 
-SETUP_TIMEOUT = 15  # seconds — fail fast, let HA retry with backoff
+SETUP_TIMEOUT = 60  # seconds — Azure IoT MQTT negotiation needs time at startup
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +61,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await device_manager.connect()
     except Exception as ex:
         _LOGGER.warning("Initial connection failed: %s. Trying new sas_token...", ex)
+        try:
+            await device_manager.shutdown()
+        except Exception:
+            pass
         device_manager = ToshibaAcDeviceManager(
             entry.data["username"], entry.data["password"], entry.data["device_id"]
         )
@@ -70,6 +74,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             new_data = {**entry.data, "sas_token": new_sas_token}
             hass.config_entries.async_update_entry(entry, data=new_data)
         except Exception as ex2:
+            try:
+                await device_manager.shutdown()
+            except Exception:
+                pass
             raise ConfigEntryNotReady(
                 "Toshiba cloud not reachable, will retry"
             ) from ex2
@@ -79,6 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async with asyncio.timeout(SETUP_TIMEOUT):
             await device_manager.get_devices()
     except Exception as ex:
+        try:
+            await device_manager.shutdown()
+        except Exception:
+            pass
         raise ConfigEntryNotReady(
             "Failed to fetch devices, will retry"
         ) from ex

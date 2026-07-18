@@ -5,13 +5,33 @@ from __future__ import annotations
 import asyncio
 import logging
 
+import aiohttp
 from toshiba_estia.device_manager import ToshibaAcDeviceManager
+from toshiba_estia.utils.http_api import ToshibaAcHttpApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
+
+# Since ~2026-07-16 Toshiba's WAF returns 429 on /api/Consumer/Login unless a
+# Device-ID header (any 16-hex value) is present. The pinned toshiba-estia
+# library (v0.1.2) doesn't send one, so inject it as an aiohttp session
+# default until upstream ships a fix.
+# See https://github.com/h4de5/home-assistant-toshiba_ac/issues/297
+_WAF_DEVICE_ID = "a1b2c3d4e5f60718"
+
+_original_http_connect = ToshibaAcHttpApi.connect
+
+
+async def _http_connect_with_device_id(self):
+    if not self.session:
+        self.session = aiohttp.ClientSession(headers={"Device-ID": _WAF_DEVICE_ID})
+    await _original_http_connect(self)
+
+
+ToshibaAcHttpApi.connect = _http_connect_with_device_id
 
 PLATFORMS = ["climate",  "sensor",  "water_heater", "binary_sensor"]
 

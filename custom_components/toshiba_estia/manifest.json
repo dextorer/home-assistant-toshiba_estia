@@ -1,18 +1,20 @@
 {
   "domain": "toshiba_estia",
   "name": "Toshiba Estia",
-  "codeowners": ["@lordross"],
+  "codeowners": [
+    "@lordross"
+  ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/lordross/home-assistant-toshiba_estia",
+  "documentation": "https://github.com/dextorer/home-assistant-toshiba_estia",
   "homekit": {},
   "iot_class": "cloud_push",
-  "issue_tracker": "https://github.com/lordross/home-assistant-toshiba_estia/issues",
+  "issue_tracker": "https://github.com/dextorer/home-assistant-toshiba_estia/issues",
   "requirements": [
     "toshiba-estia@git+https://github.com/lordross/Toshiba-Estia-control@v0.1.2",
     "janus==1.0.0"
   ],
   "ssdp": [],
-  "version": "2025.12.1",
+  "version": "2026.7.0",
   "zeroconf": []
 }
